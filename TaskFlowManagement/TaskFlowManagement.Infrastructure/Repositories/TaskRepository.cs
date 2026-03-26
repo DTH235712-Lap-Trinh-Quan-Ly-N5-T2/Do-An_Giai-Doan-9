@@ -538,7 +538,7 @@ namespace TaskFlowManagement.Infrastructure.Repositories
                 stats.ProjectProgresses.Add(new ProjectProgressDto
                 {
                     ProjectName = proj.ProjectName,
-                    ProgressPercentage = Math.Round(proj.AvgProgress, 1)
+                    ProgressPercentage = (decimal)Math.Round(proj.AvgProgress, 1)
                 });
             }
 
@@ -587,7 +587,7 @@ namespace TaskFlowManagement.Infrastructure.Repositories
                     ProjectName = p.Name,
                     TotalTasks = p.Tasks.Count(),
                     CompletedTasks = p.Tasks.Count(t => t.IsCompleted),
-                    AvgProgress = p.Tasks.Any() ? p.Tasks.Average(t => (double)t.ProgressPercent) : 0,
+                    AvgProgress = p.Tasks.Any() ? (decimal)p.Tasks.Average(t => (double)t.ProgressPercent) : 0m,
                     Status = p.Status
                 })
                 .ToListAsync();

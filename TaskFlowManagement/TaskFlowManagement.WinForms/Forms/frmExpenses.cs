@@ -56,6 +56,14 @@ namespace TaskFlowManagement.WinForms.Forms
             UIHelper.StyleToolButton(btnDelete, "🗑️ Xóa", UIHelper.ButtonVariant.Danger, btnDelete.Left, btnDelete.Top, 80, 34);
             UIHelper.StyleToolButton(btnDetail, "📋 Chi tiết", UIHelper.ButtonVariant.Slate, btnDetail.Left, btnDetail.Top, 100, 34);
 
+            // GĐ9: Nút xuất báo cáo RDLC (dùng field để SetupPermissions() kiểm soát được)
+            btnExportReport = new Button();
+            UIHelper.StyleToolButton(btnExportReport, "📊 Xuất báo cáo", UIHelper.ButtonVariant.Purple,
+                btnDetail.Right + 12, btnDetail.Top, 145, 34);
+            btnExportReport.Name = "btnExportReport";
+            btnExportReport.Click += async (s, e) => await OpenReportAsync();
+            panelToolbar.Controls.Add(btnExportReport);
+
             // 4. Dàn đều Summary Cards (Responsive Top Section)
             // Thay thế pnlSummaryCard hiện tại bằng TableLayoutPanel
             var tlpSummary = new TableLayoutPanel
@@ -162,10 +170,14 @@ namespace TaskFlowManagement.WinForms.Forms
         private void SetupPermissions()
         {
             // Chỉ Manager/Admin mới được thêm/sửa/xóa chi phí
-            bool canEdit = AppSession.IsManager || AppSession.IsAdmin;
-            btnAdd.Visible = canEdit;
-            btnEdit.Visible = canEdit;
-            btnDelete.Visible = canEdit;
+            bool canManage = AppSession.IsManager || AppSession.IsAdmin;
+            btnAdd.Visible    = canManage;
+            btnEdit.Visible   = canManage;
+            btnDelete.Visible = canManage;
+
+            // GĐ9: Nút xuất báo cáo cũng chỉ dành cho Admin/Manager
+            // btnExportReport được khởi tạo trong SetupUI() – gọi trước SetupPermissions()
+            btnExportReport.Visible = canManage;
         }
 
         private void WireEvents()
@@ -194,6 +206,7 @@ namespace TaskFlowManagement.WinForms.Forms
             btnEdit.Click += async (s, e) => await OpenEditForm(_selectedExpense);
             btnDelete.Click += async (s, e) => await DeleteExpenseAsync();
             btnDetail.Click += (s, e) => ShowDetail();
+            // GĐ9: btnReport được wire trong SetupUI() qua anonymous handler
 
             dgvExpenses.CellFormatting += dgvExpenses_CellFormatting;
         }
@@ -389,5 +402,51 @@ namespace TaskFlowManagement.WinForms.Forms
         }
 
         private void SetStatus(string msg) => lblStatus.Text = msg;
+
+        // ── GĐ9: Mở Báo cáo RDLC ──────────────────────────────────────────────
+
+        /// <summary>
+        /// Mở frmReportViewer để xuất báo cáo chi phí &amp; ngân sách.
+        /// - Nếu người dùng đang chọn một dự án cụ thể → truyền projectId vào.
+        /// - Nếu đang xem "Tất cả" → truyền null (báo cáo tổng hợp).
+        /// Luồng: WaitCursor → khởi tạo form → Default cursor → ShowDialog → finally reset.
+        /// </summary>
+        private async Task OpenReportAsync()
+        {
+            try
+            {
+                // 1. Hiển thị WaitCursor – báo hiệu đang xử lý
+                this.Cursor = Cursors.WaitCursor;
+                Application.DoEvents(); // Đảm bảo cursor được cập nhật ngay
+
+                // 2. Lấy projectId từ ComboBox lọc hiện tại
+                int? selectedProjectId = null;
+                if (cboProject.SelectedItem is ComboItem item && item.Id > 0)
+                {
+                    selectedProjectId = item.Id;
+                }
+
+                // 3. Khởi tạo frmReportViewer qua new (runtime param – không qua DI container)
+                using var reportForm = new frmReportViewer(_expenseService, selectedProjectId);
+
+                // 4. Trả về Default cursor trước khi hiện dialog (frmReportViewer tự quản WaitCursor)
+                this.Cursor = Cursors.Default;
+                reportForm.ShowDialog(this);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Không thể mở cửa sổ báo cáo:\n\n{ex.Message}",
+                    "Lỗi Báo cáo",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+            }
+            finally
+            {
+                // 5. Đảm bảo luôn khôi phục cursor dù thành công hay lỗi
+                this.Cursor = Cursors.Default;
+            }
+        }
     }
 }

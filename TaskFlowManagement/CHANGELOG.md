@@ -4,6 +4,67 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ---
 
+## [v9.0.0] – 2026-03-30### Added / Fixed
+- **UC-Report-01**: Báo cáo Chi phí & Ngân sách Dự án dùng công nghệ Microsoft RDLC.
+- Dứt điểm tương thích RDLC trên .NET 8 (Fix Schema 2008, DateOnly Mapping và Dependency Pinning).
+- **[NEW]** `DTOs/ExpenseReportDto.cs` – DTO phẳng hóa dữ liệu cho báo cáo:
+  - Gom dữ liệu từ Project, Customer, Owner và SUM(Expense) thành 1 object
+  - Computed properties: `Remaining`, `UsagePercent` (decimal), `IsOverBudget`
+  - **Constraint Vàng**: 100% trường tiền tệ dùng `decimal` (không có `double/float`)
+- **[MODIFY]** `Interfaces/Services/IExpenseService.cs` – Bổ sung:
+  - `Task<List<ExpenseReportDto>> GetExpenseReportDataAsync(int? projectId = null);`
+- **[MODIFY]** `Interfaces/IExpenseRepository.cs` – Bổ sung:
+  - `Task<List<ExpenseReportDto>> GetExpenseReportDataAsync(int? projectId = null);`
+
+### ✅ Tầng Infrastructure (Data Access)
+- **[MODIFY]** `Repositories/ExpenseRepository.cs` – Triển khai `GetExpenseReportDataAsync`:
+  - `AsNoTracking()` toàn bộ truy vấn báo cáo
+  - Projection `.Select()` trực tiếp từ Entity sang `ExpenseReportDto` (bypass Entity rule)
+  - LEFT JOIN Project → Customer, Owner, Expenses với `SUM(Amount)` trên DB
+  - `(decimal?)e.Amount ?? 0m` – xử lý NULL-safe cho dự án chưa có chi phí
+
+### ✅ Tầng Presentation (WinForms – UI & RDLC)
+- **[NEW]** `Forms/frmReportViewer.cs` – Form hiển thị báo cáo dùng chung:
+  - `async/await` load data với `WaitCursor` khi đang tải
+  - `ReportViewer` mode Local, nhúng RDLC qua `EmbeddedResource`
+  - Truyền `pReporter` (AppSession.FullName) và `pExportDate` (DateTime.Now vi-VN)
+- **[NEW]** `Forms/frmReportViewer.Designer.cs` – Layout: Header navy #0F1722, ReportViewer Dock Fill
+- **[MODIFY]** `Forms/frmExpenses.cs` – Thêm nút **📊 Xuất báo cáo** (Purple):
+  - Truyền projectId từ ComboBox lọc (null → báo cáo tổng hợp)
+  - Mở `frmReportViewer` bằng `new` trực tiếp (exception pattern hợp lệ cho runtime param)
+
+### ✅ Báo cáo RDLC
+- **[NEW]** `Reports/ProjectExpenseReport.rdlc` – Toàn bộ XML báo cáo:
+  - Header: màu `#0F1722` (navy đậm), chữ trắng, Segoe UI 16pt Bold
+  - Bảng 9 cột: STT, Tên dự án, Khách hàng, Quản lý, Ngân sách, Chi phí TT, Còn lại, Tỷ lệ%, Trạng thái
+  - Định dạng N0 + ký hiệu ` ₫`, ngôn ngữ vi-VN
+  - Zebra-stripe rows (trắng / #F8FAFC xen kẽ)
+  - Cảnh báo màu đỏ `#DC2626` khi chi phí vượt ngân sách (`IsOverBudget`)
+  - Cảnh báo màu vàng `#D97706` khi UsagePercent > 80%
+  - Dòng tổng cộng SUM (Budget, TotalExpense, Remaining)
+  - Footer: **"Người xuất: [pReporter] – Ngày xuất: [pExportDate]"** + số trang
+  - Khổ A4 Landscape (29.7 × 21 cm), margin 1.2cm
+- **[NEW]** `Reports/dsTaskFlow.xsd` – Typed DataSet Schema:
+  - Ánh xạ chính xác 12 field → `ExpenseReportDto` properties
+  - Khai báo type: `xs:decimal` cho Budget/TotalExpense/Remaining/UsagePercent
+  - Hỗ trợ nullable cho `PlannedEndDate` (`nillable="true"`)
+
+### ✅ Cấu hình dự án
+- **[MODIFY]** `TaskFlowManagement.WinForms.csproj`:
+  - Thêm `<PackageReference Include="Microsoft.Reporting.WinForms" Version="15.2.1" />`
+  - Thêm `<EmbeddedResource Include="Reports\ProjectExpenseReport.rdlc" />`
+  - Thêm `<None Include="Reports\dsTaskFlow.xsd" />`
+- **[MODIFY]** `Program.cs` – Ghi chú exception pattern cho `frmReportViewer` (dùng `new` thay DI)
+
+### 🔧 Kỹ thuật nổi bật
+- **Projection Pattern** – Repository truy vấn thẳng sang DTO, không nạp Entity vào RAM
+- **Async Report Loading** – Không block UI thread khi truy vấn DB
+- **Parameter Injection** – Audit trail tự động qua `AppSession.FullName`
+- **Conditional Formatting** – RDLC tự tô màu theo ngưỡng ngân sách (xanh/vàng/đỏ)
+- **Zero-safe Division** – `UsagePercent` trả về `0m` nếu `Budget = 0`
+
+---
+
 ## [v1.0.0] – 2026-03-05 · Giai đoạn 1: Foundation
 
 ### ✅ Kiến trúc

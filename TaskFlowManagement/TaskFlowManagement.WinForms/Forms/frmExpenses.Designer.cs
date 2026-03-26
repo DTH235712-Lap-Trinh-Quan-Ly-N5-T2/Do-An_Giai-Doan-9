@@ -222,7 +222,7 @@ namespace TaskFlowManagement.WinForms.Forms
         private Panel panelHeader, panelFilter, panelSummary, pnlSummaryCard, panelToolbar, panelStatus;
         private Label lblHeader, lblProjectFilter, lblTypeFilter, lblBudgetTitle, lblBudgetVal, lblTotalExpenseTitle, lblTotalExpenseVal, lblRemainingTitle, lblRemainingVal, lblUsagePct, lblCount, lblStatus;
         private ComboBox cboProject, cboExpenseType;
-        private Button btnRefresh, btnAdd, btnEdit, btnDelete, btnDetail;
+        private Button btnRefresh, btnAdd, btnEdit, btnDelete, btnDetail, btnExportReport;
         private DataGridView dgvExpenses;
         private DataGridViewTextBoxColumn colId, colProject, colType, colAmount, colDate, colNote, colCreatedBy;
     }

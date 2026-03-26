@@ -45,6 +45,28 @@ namespace TaskFlowManagement.WinForms.Forms
             
             pnlHeader.Controls.Add(header);
 
+            // GĐ9: Nút "Tải báo cáo tổng kết" – chỉ hiển thị cho Admin/Manager
+            // Vị trí: góc phải pnlHeader, nổi bật trên nền Navy bằng viền sáng
+            if (AppSession.IsAdmin || AppSession.IsManager)
+            {
+                var btnHeaderReport = new Button();
+                UIHelper.StyleButton(btnHeaderReport, UIHelper.ButtonVariant.Secondary);
+                btnHeaderReport.Text = "📊 Tải báo cáo tổng kết";
+                btnHeaderReport.Name = "btnHeaderReport";
+                btnHeaderReport.Size = new Size(190, 34);
+                // Anchor Top|Right: giữ nút ở góc phải khi form resize
+                btnHeaderReport.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+                // pnlHeader.Width = 1200 (design-time). Bút = 1200 - 190 - 20 = 990
+                btnHeaderReport.Location = new Point(990, 17);
+                // Viền sáng nổi bật trên nền Navy header
+                btnHeaderReport.FlatAppearance.BorderSize = 1;
+                btnHeaderReport.FlatAppearance.BorderColor = UIHelper.ColorBorderLight;
+                btnHeaderReport.Click += async (s, e) => await OpenDashboardReportAsync();
+                pnlHeader.Controls.Add(btnHeaderReport);
+                // BringToFront để nút hiển lên trên inner header panel
+                btnHeaderReport.BringToFront();
+            }
+
             pnlToolbar.BackColor = UIHelper.ColorBackground;
             lblProjectFilter.Font = UIHelper.FontLabel;
             UIHelper.StyleFilterCombo(cboProject);
@@ -650,6 +672,56 @@ namespace TaskFlowManagement.WinForms.Forms
                 g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
                 var size = g.MeasureString(msg, UIHelper.FontBase);
                 g.DrawString(msg, UIHelper.FontBase, brush, (width - size.Width) / 2, (height - size.Height) / 2);
+            }
+        }
+
+        // ══════════════════════════════════════════════════════════════════
+        // GĐ9: MỞ BÁO CÁO TỔNG KỎT TỪ DASHBOARD
+        // ══════════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Mở frmReportViewer từ Dashboard.
+        /// - Nếu đang chọn một dự án cụ thể trên cboProject → truyền projectId.
+        /// - Nếu chọn "Toàn bộ hệ thống" → truyền null (báo cáo tổng hợp).
+        /// Luồng: WaitCursor → khởi tạo form → Default cursor → ShowDialog → finally reset.
+        /// Điều kiện gọi: chỉ khi AppSession.IsAdmin || AppSession.IsManager (kiểm tra tại SetupUI).
+        /// </summary>
+        private async Task OpenDashboardReportAsync()
+        {
+            try
+            {
+                // 1. Hiển thị WaitCursor
+                this.Cursor = Cursors.WaitCursor;
+                Application.DoEvents();
+
+                // 2. Lấy projectId từ ComboBox Dashboard
+                int? selectedProjectId = null;
+                if (cboProject.SelectedItem != null)
+                {
+                    var selId = (int)((dynamic)cboProject.SelectedItem).Id;
+                    if (selId > 0) selectedProjectId = selId;
+                }
+
+                // 3. Khởi tạo frmReportViewer – _expenseService đã được inject qua DI
+                using var reportForm = new frmReportViewer(_expenseService, selectedProjectId);
+
+                // 4. Trả về Default cursor trước khi hiện dialog
+                this.Cursor = Cursors.Default;
+                reportForm.ShowDialog(this);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Không thể mở cửa sổ báo cáo:\n\n{ex.Message}",
+                    "Lỗi Báo cáo",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+            }
+            finally
+            {
+                // 5. Luôn khôi phục cursor
+                this.Cursor = Cursors.Default;
             }
         }
     }

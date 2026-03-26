@@ -6,7 +6,7 @@ using TaskFlowManagement.Core.Interfaces.Services;
 namespace TaskFlowManagement.Core.Services.Expenses
 {
     /// <summary>
-    /// Triển khai nghiệp vụ Quản lý Chi phí (GĐ8: UC-23).
+    /// Triển khai nghiệp vụ Quản lý Chi phí (GĐ8: UC-23 / GĐ9: UC-Report-01).
     /// Tuân thủ quy tắc Financial Precision và Audit Trail.
     /// </summary>
     public class ExpenseService : IExpenseService
@@ -71,11 +71,11 @@ namespace TaskFlowManagement.Core.Services.Expenses
                 if (existing == null) return (false, "Không tìm thấy khoản chi phí này.");
 
                 // Cập nhật các trường cho phép
-                existing.ProjectId = expense.ProjectId;
+                existing.ProjectId   = expense.ProjectId;
                 existing.ExpenseType = expense.ExpenseType;
-                existing.Amount = expense.Amount;
+                existing.Amount      = expense.Amount;
                 existing.ExpenseDate = expense.ExpenseDate;
-                existing.Note = expense.Note;
+                existing.Note        = expense.Note;
 
                 await _expenseRepo.UpdateAsync(existing);
                 _taskService.NotifyDataChanged();
@@ -113,11 +113,24 @@ namespace TaskFlowManagement.Core.Services.Expenses
 
             return new ProjectBudgetSummaryDto
             {
-                ProjectId = project.Id,
-                ProjectName = project.Name,
-                Budget = project.Budget,
+                ProjectId    = project.Id,
+                ProjectName  = project.Name,
+                Budget       = project.Budget,
                 TotalExpense = totalExpense
             };
+        }
+
+        /// <summary>
+        /// GĐ9 – UC-Report-01: Lấy dữ liệu báo cáo chi phí và ngân sách.
+        ///
+        /// Service chỉ làm nhiệm vụ điều phối (orchestration):
+        ///   - Ủy thác toàn bộ truy vấn xuống Repository (tuân thủ SRP).
+        ///   - Repository chịu trách nhiệm Projection, AsNoTracking, GroupBy.
+        ///   - Service bắt exception và bọc lại thành list rỗng thay vì để UI crash.
+        /// </summary>
+        public async Task<List<ExpenseReportDto>> GetExpenseReportDataAsync(int? projectId = null)
+        {
+            return await _expenseRepo.GetExpenseReportDataAsync(projectId);
         }
     }
 }

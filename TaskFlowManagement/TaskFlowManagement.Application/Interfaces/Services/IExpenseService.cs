@@ -4,7 +4,7 @@ using TaskFlowManagement.Core.Entities;
 namespace TaskFlowManagement.Core.Interfaces.Services
 {
     /// <summary>
-    /// Service nghiệp vụ quản lý Chi phí dự án (GĐ8: UC-23).
+    /// Service nghiệp vụ quản lý Chi phí dự án (GĐ8: UC-23 / GĐ9: UC-Report-01).
     /// Tất cả phương thức đều là async để không chặn UI thread.
     /// </summary>
     public interface IExpenseService
@@ -48,5 +48,24 @@ namespace TaskFlowManagement.Core.Interfaces.Services
         /// Trả về null nếu dự án không tồn tại.
         /// </summary>
         Task<ProjectBudgetSummaryDto?> GetProjectBudgetSummaryAsync(int projectId);
+
+        // ── Báo cáo (GĐ9: UC-Report-01) ──────────────────────────────────
+
+        /// <summary>
+        /// Lấy dữ liệu báo cáo chi phí và ngân sách dự án (ExpenseReportDto).
+        ///
+        /// Thiết kế:
+        ///   - Khi projectId = null → trả về tất cả dự án (báo cáo tổng hợp).
+        ///   - Khi projectId có giá trị → chỉ trả về dữ liệu của dự án đó.
+        ///   - Dữ liệu được "phẳng hóa" qua Projection .Select() tại Repository
+        ///     → không nạp Entity rác vào bộ nhớ.
+        ///   - Trả về list rỗng nếu không có dữ liệu (không throw exception).
+        ///   - Mọi trường tiền tệ trong ExpenseReportDto đều là decimal.
+        /// </summary>
+        /// <param name="projectId">
+        ///   null = tất cả dự án;
+        ///   có giá trị = lọc theo dự án cụ thể.
+        /// </param>
+        Task<List<ExpenseReportDto>> GetExpenseReportDataAsync(int? projectId = null);
     }
 }

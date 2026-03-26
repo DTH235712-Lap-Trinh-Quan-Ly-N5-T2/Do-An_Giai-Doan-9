@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  dsTaskFlow.xsd – Typed DataSet Schema (GĐ9: UC-Report-01)
+  ============================================================
+  Mục đích: Định nghĩa schema cho DataSet "dsTaskFlow" dùng trong RDLC.
+  Mỗi <xs:element> trong <xs:sequence> ứng với một property của ExpenseReportDto.
+
+  Cách sử dụng trong Visual Studio:
+    1. Thêm file này vào project WinForms (Add → Existing Item).
+    2. Khi thiết kế RDLC, Report Data → Datasets → Add Dataset → chọn dsTaskFlow.
+    3. Visual Studio sẽ tự nhận diện các field để kéo vào bảng báo cáo.
+
+  Ánh xạ:
+    ExpenseReportDto Property  ←→  xs:element Name
+    ─────────────────────────────────────────────
+    ProjectId                  ←→  ProjectId     (int)
+    ProjectName                ←→  ProjectName   (string)
+    ProjectStatus              ←→  ProjectStatus (string)
+    CustomerName               ←→  CustomerName  (string)
+    ManagerName                ←→  ManagerName   (string)
+    Budget                     ←→  Budget        (decimal)
+    TotalExpense               ←→  TotalExpense  (decimal)
+    Remaining                  ←→  Remaining     (decimal)  [computed]
+    UsagePercent               ←→  UsagePercent  (decimal)  [computed]
+    IsOverBudget               ←→  IsOverBudget  (bool)     [computed]
+    StartDate                  ←→  StartDate     (date)
+    PlannedEndDate             ←→  PlannedEndDate(date, nullable)
+-->
+<xs:schema id="dsTaskFlow"
+           targetNamespace="http://tempuri.org/dsTaskFlow.xsd"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:msdata="urn:schemas-microsoft-com:xml-msdata"
+           xmlns:msprop="urn:schemas-microsoft-com:xml-msprop"
+           attributeFormDefault="qualified"
+           elementFormDefault="qualified">
+
+  <xs:element name="dsTaskFlow" msdata:IsDataSet="true"
+              msdata:UseCurrentLocale="true"
+              msprop:Generator_DataSetName="dsTaskFlow"
+              msprop:Generator_UserDSName="dsTaskFlow">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+
+        <!-- ============================================================
+             Table: ExpenseReport
+             Ánh xạ trực tiếp với ExpenseReportDto
+             ============================================================ -->
+        <xs:element name="ExpenseReport"
+                    msprop:Generator_TableClassName="ExpenseReportDataTable"
+                    msprop:Generator_TableVarName="tableExpenseReport"
+                    msprop:Generator_TablePropName="ExpenseReport"
+                    msprop:Generator_RowClassName="ExpenseReportRow"
+                    msprop:Generator_RowEvArgName="ExpenseReportRowChangeEvent"
+                    msprop:Generator_RowEvHandlerName="ExpenseReportRowChangeEventHandler">
+          <xs:complexType>
+            <xs:sequence>
+
+              <!-- Thông tin Dự án -->
+              <xs:element name="ProjectId"
+                          msprop:Generator_ColumnVarNameInTable="columnProjectId"
+                          msprop:Generator_ColumnPropNameInRow="ProjectId"
+                          msprop:Generator_ColumnPropNameInTable="ProjectIdColumn"
+                          msprop:Generator_UserColumnName="ProjectId"
+                          type="xs:int"
+                          minOccurs="1" />
+
+              <xs:element name="ProjectName"
+                          msprop:Generator_ColumnVarNameInTable="columnProjectName"
+                          msprop:Generator_ColumnPropNameInRow="ProjectName"
+                          msprop:Generator_ColumnPropNameInTable="ProjectNameColumn"
+                          msprop:Generator_UserColumnName="ProjectName"
+                          type="xs:string"
+                          minOccurs="1" />
+
+              <xs:element name="ProjectStatus"
+                          msprop:Generator_ColumnVarNameInTable="columnProjectStatus"
+                          msprop:Generator_ColumnPropNameInRow="ProjectStatus"
+                          msprop:Generator_ColumnPropNameInTable="ProjectStatusColumn"
+                          msprop:Generator_UserColumnName="ProjectStatus"
+                          type="xs:string"
+                          minOccurs="0" />
+
+              <!-- Thông tin Khách hàng -->
+              <xs:element name="CustomerName"
+                          msprop:Generator_ColumnVarNameInTable="columnCustomerName"
+                          msprop:Generator_ColumnPropNameInRow="CustomerName"
+                          msprop:Generator_ColumnPropNameInTable="CustomerNameColumn"
+                          msprop:Generator_UserColumnName="CustomerName"
+                          type="xs:string"
+                          minOccurs="0" />
+
+              <!-- Thông tin Quản lý dự án -->
+              <xs:element name="ManagerName"
+                          msprop:Generator_ColumnVarNameInTable="columnManagerName"
+                          msprop:Generator_ColumnPropNameInRow="ManagerName"
+                          msprop:Generator_ColumnPropNameInTable="ManagerNameColumn"
+                          msprop:Generator_UserColumnName="ManagerName"
+                          type="xs:string"
+                          minOccurs="0" />
+
+              <!-- Tài chính – Tất cả dùng decimal (xs:decimal) -->
+              <xs:element name="Budget"
+                          msprop:Generator_ColumnVarNameInTable="columnBudget"
+                          msprop:Generator_ColumnPropNameInRow="Budget"
+                          msprop:Generator_ColumnPropNameInTable="BudgetColumn"
+                          msprop:Generator_UserColumnName="Budget"
+                          type="xs:decimal"
+                          minOccurs="1" />
+
+              <xs:element name="TotalExpense"
+                          msprop:Generator_ColumnVarNameInTable="columnTotalExpense"
+                          msprop:Generator_ColumnPropNameInRow="TotalExpense"
+                          msprop:Generator_ColumnPropNameInTable="TotalExpenseColumn"
+                          msprop:Generator_UserColumnName="TotalExpense"
+                          type="xs:decimal"
+                          minOccurs="1" />
+
+              <xs:element name="Remaining"
+                          msprop:Generator_ColumnVarNameInTable="columnRemaining"
+                          msprop:Generator_ColumnPropNameInRow="Remaining"
+                          msprop:Generator_ColumnPropNameInTable="RemainingColumn"
+                          msprop:Generator_UserColumnName="Remaining"
+                          type="xs:decimal"
+                          minOccurs="1" />
+
+              <xs:element name="UsagePercent"
+                          msprop:Generator_ColumnVarNameInTable="columnUsagePercent"
+                          msprop:Generator_ColumnPropNameInRow="UsagePercent"
+                          msprop:Generator_ColumnPropNameInTable="UsagePercentColumn"
+                          msprop:Generator_UserColumnName="UsagePercent"
+                          type="xs:decimal"
+                          minOccurs="1" />
+
+              <xs:element name="IsOverBudget"
+                          msprop:Generator_ColumnVarNameInTable="columnIsOverBudget"
+                          msprop:Generator_ColumnPropNameInRow="IsOverBudget"
+                          msprop:Generator_ColumnPropNameInTable="IsOverBudgetColumn"
+                          msprop:Generator_UserColumnName="IsOverBudget"
+                          type="xs:boolean"
+                          minOccurs="1" />
+
+              <!-- Metadata thời gian -->
+              <xs:element name="StartDate"
+                          msprop:Generator_ColumnVarNameInTable="columnStartDate"
+                          msprop:Generator_ColumnPropNameInRow="StartDate"
+                          msprop:Generator_ColumnPropNameInTable="StartDateColumn"
+                          msprop:Generator_UserColumnName="StartDate"
+                          type="xs:date"
+                          minOccurs="0" />
+
+              <xs:element name="PlannedEndDate"
+                          msprop:Generator_ColumnVarNameInTable="columnPlannedEndDate"
+                          msprop:Generator_ColumnPropNameInRow="PlannedEndDate"
+                          msprop:Generator_ColumnPropNameInTable="PlannedEndDateColumn"
+                          msprop:Generator_UserColumnName="PlannedEndDate"
+                          type="xs:date"
+                          minOccurs="0"
+                          nillable="true" />
+
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+
+</xs:schema>

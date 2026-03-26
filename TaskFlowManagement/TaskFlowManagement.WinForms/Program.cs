@@ -85,7 +85,10 @@ namespace TaskFlowManagement.WinForms
             services.AddTransient<frmDashboard>();
             // GD8: Quản lý Chi phí
             services.AddTransient<frmExpenses>();
-            // frmTaskEdit KHÔNG đăng ký ở đây vì dùng `new` trực tiếp với tham số taskId runtime
+            // GD9: Báo cáo Chi phí & Ngân sách (RDLC)
+            // frmReportViewer KHÔNG đăng ký Transient vì nhận tham số runtime (projectId)
+            // → Được khởi tạo trực tiếp bằng new frmReportViewer(_expenseService, projectId)
+            //   trong frmExpenses.OpenReportAsync() – đây là exception pattern hợp lệ.
 
             ServiceProvider = services.BuildServiceProvider();
 
